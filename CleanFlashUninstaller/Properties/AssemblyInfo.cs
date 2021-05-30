@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Clean Flash Player 29.0.0.171 Uninstaller")]
+[assembly: AssemblyTitle("Clean Flash Player 32.0.0.465 Uninstaller")]
 [assembly: AssemblyDescription("The newest version of Flash Player, patched and ready to go beyond 2021.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("FlashPatch Team")]
-[assembly: AssemblyProduct("Clean Flash Player 29.0.0.171 Uninstaller")]
+[assembly: AssemblyProduct("Clean Flash Player 32.0.0.465 Uninstaller")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("29.0.0.171")]
-[assembly: AssemblyFileVersion("29.0.0.171")]
+[assembly: AssemblyVersion("32.0.0.465")]
+[assembly: AssemblyFileVersion("32.0.0.465")]

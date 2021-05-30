@@ -39,9 +39,9 @@ namespace CleanFlashCommon
 
     public class UpdateChecker
     {
-        private static readonly string FLASH_VERSION = "29.0.0.171";
-        private static readonly string VERSION = "v29.0.0.171";
-        private static readonly string FLASH_PLAYER_EXECUTABLE = "flashplayer29_0r0_171_win_sa.exe";
+        private static readonly string FLASH_VERSION = "32.0.0.465";
+        private static readonly string VERSION = "v32.0.0.465";
+        private static readonly string FLASH_PLAYER_EXECUTABLE = "flashplayer_32_sa.exe";
         private static readonly string AUTHOR = "cleanflash";
         private static readonly string REPO = "installer";
         private static readonly string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36";

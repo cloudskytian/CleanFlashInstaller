@@ -184,9 +184,9 @@ namespace CleanFlashInstaller.Properties {
         ///&quot;7.0&quot;=dword:ffffffff
         ///&quot;6.0&quot;=dword:ffffffff
         ///&quot;30.0&quot;=dword:ffffffff
-        ///&quot;29.0&quot;=dword:000000ab
+        ///&quot;29.0&quot;=dword:ffffffff
         ///&quot;31.0&quot;=dword:ffffffff
-        ///&quot;32.0&quot;=dword:ffffffff
+        ///&quot;32.0&quot;=dword:000001d1
         ///&quot;8.0&quot;=dword:ffffffff
         ///&quot;11.0&quot;=dword:ffffffff
         ///&quot;10.0&quot;=dword:ffffffff
