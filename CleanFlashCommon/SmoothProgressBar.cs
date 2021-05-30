@@ -3,21 +3,27 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace CleanFlashCommon {
-    public class SmoothProgressBar : UserControl {
-        int min = 0;
-        int max = 100;
-        int val = 0;
-        Color Color1 = Color.Black;
-        Color Color2 = Color.White;
+namespace CleanFlashCommon
+{
+    public class SmoothProgressBar : UserControl
+    {
+        private int min = 0;
+        private int max = 100;
+        private int val = 0;
+        private Color Color1 = Color.Black;
+        private Color Color2 = Color.White;
 
-        protected override void OnResize(EventArgs e) {
+        protected override void OnResize(EventArgs e)
+        {
             Invalidate();
         }
 
-        protected override void OnPaint(PaintEventArgs e) {
-            using (Graphics graphics = e.Graphics) {
-                using (Brush brush = new LinearGradientBrush(ClientRectangle, Color1, Color2, 0.0F)) {
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            using (Graphics graphics = e.Graphics)
+            {
+                using (Brush brush = new LinearGradientBrush(ClientRectangle, Color1, Color2, 0.0F))
+                {
                     float percent = (val - min) / (float)(max - min);
                     Rectangle rect = ClientRectangle;
 
@@ -33,15 +39,16 @@ namespace CleanFlashCommon {
             }
         }
 
-        public int Minimum {
-            get {
-                return min;
-            }
+        public int Minimum
+        {
+            get => min;
 
-            set {
+            set
+            {
                 min = Math.Max(0, Math.Min(max, value));
 
-                if (val < min) {
+                if (val < min)
+                {
                     val = min;
                 }
 
@@ -49,19 +56,21 @@ namespace CleanFlashCommon {
             }
         }
 
-        public int Maximum {
-            get {
-                return max;
-            }
+        public int Maximum
+        {
+            get => max;
 
-            set {
-                if (value < min) {
+            set
+            {
+                if (value < min)
+                {
                     min = value;
                 }
 
                 max = value;
 
-                if (val > max) {
+                if (val > max)
+                {
                     val = max;
                 }
 
@@ -69,20 +78,25 @@ namespace CleanFlashCommon {
             }
         }
 
-        public int Value {
-            get {
-                return val;
-            }
+        public int Value
+        {
+            get => val;
 
-            set {
+            set
+            {
                 int oldValue = val;
 
                 // Make sure that the value does not stray outside the valid range.
-                if (value < min) {
+                if (value < min)
+                {
                     val = min;
-                } else if (value > max) {
+                }
+                else if (value > max)
+                {
                     val = max;
-                } else {
+                }
+                else
+                {
                     val = value;
                 }
 
@@ -103,10 +117,13 @@ namespace CleanFlashCommon {
                 Rectangle updateRect = new Rectangle();
 
                 // Find only the part of the screen that must be updated.
-                if (newValueRect.Width > oldValueRect.Width) {
+                if (newValueRect.Width > oldValueRect.Width)
+                {
                     updateRect.X = oldValueRect.Size.Width;
                     updateRect.Width = newValueRect.Width - oldValueRect.Width;
-                } else {
+                }
+                else
+                {
                     updateRect.X = newValueRect.Size.Width;
                     updateRect.Width = oldValueRect.Width - newValueRect.Width;
                 }
@@ -118,12 +135,12 @@ namespace CleanFlashCommon {
             }
         }
 
-        public Color ProgressBarColor1 {
-            get {
-                return Color1;
-            }
+        public Color ProgressBarColor1
+        {
+            get => Color1;
 
-            set {
+            set
+            {
                 Color1 = value;
 
                 // Invalidate the control to get a repaint.
@@ -131,12 +148,12 @@ namespace CleanFlashCommon {
             }
         }
 
-        public Color ProgressBarColor2 {
-            get {
-                return Color2;
-            }
+        public Color ProgressBarColor2
+        {
+            get => Color2;
 
-            set {
+            set
+            {
                 Color2 = value;
 
                 // Invalidate the control to get a repaint.
@@ -144,7 +161,8 @@ namespace CleanFlashCommon {
             }
         }
 
-        private void Draw3DBorder(Graphics g) {
+        private void Draw3DBorder(Graphics g)
+        {
             int PenWidth = (int)Pens.White.Width;
 
             g.DrawLine(Pens.DarkGray,

@@ -1,62 +1,75 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 using System.Net;
 using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace CleanFlashCommon {
-    public class Version {
-        private string name;
-        private string version;
-        private string url;
+namespace CleanFlashCommon
+{
+    public class Version
+    {
+        private readonly string name;
+        private readonly string version;
+        private readonly string url;
 
-        public Version(string name, string version, string url) {
+        public Version(string name, string version, string url)
+        {
             this.name = name;
             this.version = version;
             this.url = url;
         }
 
-        public string GetName() {
+        public string GetName()
+        {
             return name;
         }
 
-        public string GetVersion() {
+        public string GetVersion()
+        {
             return version;
         }
 
-        public string GetUrl() {
+        public string GetUrl()
+        {
             return url;
         }
     }
 
-    public class UpdateChecker {
-        private static readonly string FLASH_VERSION = "34.0.0.155";
-        private static readonly string VERSION = "v34.0.0.155";
-        private static readonly string FLASH_PLAYER_EXECUTABLE = "flashplayer_sa.exe";
+    public class UpdateChecker
+    {
+        private static readonly string FLASH_VERSION = "29.0.0.171";
+        private static readonly string VERSION = "v29.0.0.171";
+        private static readonly string FLASH_PLAYER_EXECUTABLE = "flashplayer29_0r0_171_win_sa.exe";
         private static readonly string AUTHOR = "cleanflash";
         private static readonly string REPO = "installer";
         private static readonly string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36";
 
-        public static string GetAPILink() {
+        public static string GetAPILink()
+        {
             return "https://api.github.com/repos/" + AUTHOR + "/" + REPO + "/releases/latest";
         }
 
-        public static string GetFlashVersion() {
+        public static string GetFlashVersion()
+        {
             return FLASH_VERSION;
         }
 
-        public static string GetCurrentVersion() {
+        public static string GetCurrentVersion()
+        {
             return VERSION;
         }
 
-        public static string GetFlashPlayerExecutable() {
+        public static string GetFlashPlayerExecutable()
+        {
             return FLASH_PLAYER_EXECUTABLE;
         }
 
-        private static Version GetLatestVersionUnsafe() {
-            using (WebClient client = new WebClient()) {
+        private static Version GetLatestVersionUnsafe()
+        {
+            using (WebClient client = new WebClient())
+            {
                 client.Headers.Add("user-agent", USER_AGENT);
 
                 string release = client.DownloadString(GetAPILink());
@@ -67,7 +80,8 @@ namespace CleanFlashCommon {
                 string tag = root.Descendants("tag_name").FirstOrDefault().Value;
                 string url = root.Descendants("html_url").FirstOrDefault().Value;
 
-                if (!url.StartsWith("https://")) {
+                if (!url.StartsWith("https://"))
+                {
                     // This is a suspicious URL... We shouldn't trust it.
                     return null;
                 }
@@ -76,10 +90,14 @@ namespace CleanFlashCommon {
             }
         }
 
-        public static Version GetLatestVersion() {
-            try {
+        public static Version GetLatestVersion()
+        {
+            try
+            {
                 return GetLatestVersionUnsafe();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine(e);
                 return null;
             }

@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Windows.Forms;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
-namespace CleanFlashUninstaller {
-    static class Program {
+namespace CleanFlashUninstaller
+{
+    internal static class Program
+    {
         [Flags]
-        internal enum MoveFileFlags {
+        internal enum MoveFileFlags
+        {
             None = 0,
             ReplaceExisting = 1,
             CopyAllowed = 2,
@@ -18,25 +21,29 @@ namespace CleanFlashUninstaller {
         }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern bool MoveFileEx(
+        private static extern bool MoveFileEx(
             string lpExistingFileName,
             string lpNewFileName,
             MoveFileFlags dwFlags);
 
-        static bool DeleteOnReboot(string filename) {
+        private static bool DeleteOnReboot(string filename)
+        {
             return MoveFileEx(filename, null, MoveFileFlags.DelayUntilReboot);
         }
 
-        static string TrimPath(string path) {
-            return path.TrimEnd(new[] { '/', '\\' }); 
+        private static string TrimPath(string path)
+        {
+            return path.TrimEnd(new[] { '/', '\\' });
         }
 
-        static bool EnsureRunInTemp() {
+        private static bool EnsureRunInTemp()
+        {
             string tempFolder = TrimPath(Path.GetTempPath());
             string currentPath = Application.ExecutablePath;
             string currentFolder = TrimPath(Path.GetDirectoryName(currentPath));
-                
-            if (currentFolder.Equals(tempFolder, StringComparison.OrdinalIgnoreCase)) {
+
+            if (currentFolder.Equals(tempFolder, StringComparison.OrdinalIgnoreCase))
+            {
                 // Already running in the temp directory.
                 return true;
             }
@@ -44,11 +51,15 @@ namespace CleanFlashUninstaller {
             string currentExeName = Path.GetFileName(currentPath);
             string newPath = Path.Combine(tempFolder, currentExeName);
 
-            if (File.Exists(newPath)) {
-                try {
+            if (File.Exists(newPath))
+            {
+                try
+                {
                     // Attempt to delete the old version of the uninstaller.
                     File.Delete(newPath);
-                } catch {
+                }
+                catch
+                {
                     // Uninstaller is already running.
                     Application.Exit();
                     return false;
@@ -69,8 +80,10 @@ namespace CleanFlashUninstaller {
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main() {
-            if (!EnsureRunInTemp()) {
+        private static void Main()
+        {
+            if (!EnsureRunInTemp())
+            {
                 return;
             }
 

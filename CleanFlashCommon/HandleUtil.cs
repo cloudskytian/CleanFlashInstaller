@@ -1,19 +1,21 @@
 ﻿// Taken from: https://github.com/Walkman100/FileLocks
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading;
-using Microsoft.Win32.SafeHandles;
-using System.Diagnostics;
-using System.Linq;
 
-namespace CleanFlashCommon {
-    public static class HandleUtil {
+namespace CleanFlashCommon
+{
+    public static class HandleUtil
+    {
 
         private static Dictionary<string, string> deviceMap;
         private const string networkDevicePrefix = "\\Device\\LanmanRedirector\\";
@@ -28,13 +30,15 @@ namespace CleanFlashCommon {
             "IoCompletion", "File"
         };
 
-        internal enum NT_STATUS {
+        internal enum NT_STATUS
+        {
             STATUS_SUCCESS = 0x00000000,
             STATUS_BUFFER_OVERFLOW = unchecked((int)0x80000005L),
             STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004L)
         }
 
-        internal enum SYSTEM_INFORMATION_CLASS {
+        internal enum SYSTEM_INFORMATION_CLASS
+        {
             SystemBasicInformation = 0,
             SystemPerformanceInformation = 2,
             SystemTimeOfDayInformation = 3,
@@ -47,7 +51,8 @@ namespace CleanFlashCommon {
             SystemLookasideInformation = 45
         }
 
-        internal enum OBJECT_INFORMATION_CLASS {
+        internal enum OBJECT_INFORMATION_CLASS
+        {
             ObjectBasicInformation = 0,
             ObjectNameInformation = 1,
             ObjectTypeInformation = 2,
@@ -56,17 +61,20 @@ namespace CleanFlashCommon {
         }
 
         [Flags]
-        internal enum ProcessAccessRights {
+        internal enum ProcessAccessRights
+        {
             PROCESS_DUP_HANDLE = 0x00000040
         }
 
         [Flags]
-        internal enum DuplicateHandleOptions {
+        internal enum DuplicateHandleOptions
+        {
             DUPLICATE_CLOSE_SOURCE = 0x1,
             DUPLICATE_SAME_ACCESS = 0x2
         }
 
-        private enum SystemHandleType {
+        private enum SystemHandleType
+        {
             OB_TYPE_UNKNOWN = 0,
             OB_TYPE_TYPE = 1,
             OB_TYPE_DIRECTORY,
@@ -97,7 +105,8 @@ namespace CleanFlashCommon {
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct SYSTEM_HANDLE_ENTRY {
+        private struct SYSTEM_HANDLE_ENTRY
+        {
             public int OwnerPid;
             public byte ObjectType;
             public byte HandleFlags;
@@ -158,53 +167,66 @@ namespace CleanFlashCommon {
             [In] int ucchMax);
 
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode = true)]
-        internal sealed class SafeObjectHandle : SafeHandleZeroOrMinusOneIsInvalid {
+        internal sealed class SafeObjectHandle : SafeHandleZeroOrMinusOneIsInvalid
+        {
             private SafeObjectHandle() : base(true) { }
 
-            internal SafeObjectHandle(IntPtr preexistingHandle, bool ownsHandle) : base(ownsHandle) {
+            internal SafeObjectHandle(IntPtr preexistingHandle, bool ownsHandle) : base(ownsHandle)
+            {
                 base.SetHandle(preexistingHandle);
             }
 
-            protected override bool ReleaseHandle() {
+            protected override bool ReleaseHandle()
+            {
                 return CloseHandle(base.handle);
             }
         }
 
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode = true)]
-        internal sealed class SafeProcessHandle : SafeHandleZeroOrMinusOneIsInvalid {
+        internal sealed class SafeProcessHandle : SafeHandleZeroOrMinusOneIsInvalid
+        {
             private SafeProcessHandle()
                 : base(true) { }
 
             internal SafeProcessHandle(IntPtr preexistingHandle, bool ownsHandle)
-                : base(ownsHandle) {
+                : base(ownsHandle)
+            {
                 base.SetHandle(preexistingHandle);
             }
 
-            protected override bool ReleaseHandle() {
+            protected override bool ReleaseHandle()
+            {
                 return CloseHandle(base.handle);
             }
         }
 
-        private sealed class OpenFiles : IEnumerable<string> {
+        private sealed class OpenFiles : IEnumerable<string>
+        {
             private readonly int processId;
 
-            internal OpenFiles(int processId) {
+            internal OpenFiles(int processId)
+            {
                 this.processId = processId;
             }
 
-            public IEnumerator<string> GetEnumerator() {
+            public IEnumerator<string> GetEnumerator()
+            {
                 NT_STATUS ret;
                 int length = 0x10000;
                 // Loop, probing for required memory.
 
-                do {
+                do
+                {
                     IntPtr ptr = IntPtr.Zero;
                     RuntimeHelpers.PrepareConstrainedRegions();
 
-                    try {
+                    try
+                    {
                         RuntimeHelpers.PrepareConstrainedRegions();
 
-                        try { } finally {
+                        try { }
+                        finally
+                        {
                             // CER guarantees that the address of the allocated 
                             // memory is actually assigned to ptr if an 
                             // asynchronous exception occurs.
@@ -213,27 +235,37 @@ namespace CleanFlashCommon {
 
                         ret = NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS.SystemHandleInformation, ptr, length, out int returnLength);
 
-                        if (ret == NT_STATUS.STATUS_INFO_LENGTH_MISMATCH) {
+                        if (ret == NT_STATUS.STATUS_INFO_LENGTH_MISMATCH)
+                        {
                             // Round required memory up to the nearest 64KB boundary.
                             length = (returnLength + 0xffff) & ~0xffff;
-                        } else if (ret == NT_STATUS.STATUS_SUCCESS) {
+                        }
+                        else if (ret == NT_STATUS.STATUS_SUCCESS)
+                        {
                             int handleCount = Marshal.ReadInt32(ptr);
                             int offset = sizeof(int);
                             int size = Marshal.SizeOf(typeof(SYSTEM_HANDLE_ENTRY));
 
-                            for (int i = 0; i < handleCount; i++) {
-                                SYSTEM_HANDLE_ENTRY handleEntry = (SYSTEM_HANDLE_ENTRY) Marshal.PtrToStructure((IntPtr)((int)ptr + offset), typeof(SYSTEM_HANDLE_ENTRY));
-                                
-                                if (handleEntry.OwnerPid == processId) {
-                                    IntPtr handle = (IntPtr) handleEntry.HandleValue;
-                                    SystemHandleType handleType;
+                            for (int i = 0; i < handleCount; i++)
+                            {
+                                SYSTEM_HANDLE_ENTRY handleEntry = (SYSTEM_HANDLE_ENTRY)Marshal.PtrToStructure((IntPtr)((int)ptr + offset), typeof(SYSTEM_HANDLE_ENTRY));
 
-                                    if (GetHandleType(handle, handleEntry.OwnerPid, out handleType) && handleType == SystemHandleType.OB_TYPE_FILE) {
-                                        if (GetFileNameFromHandle(handle, handleEntry.OwnerPid, out string devicePath)) {
-                                            if (ConvertDevicePathToDosPath(devicePath, out string dosPath)) {
-                                                if (File.Exists(dosPath)) {
+                                if (handleEntry.OwnerPid == processId)
+                                {
+                                    IntPtr handle = (IntPtr)handleEntry.HandleValue;
+
+                                    if (GetHandleType(handle, handleEntry.OwnerPid, out SystemHandleType handleType) && handleType == SystemHandleType.OB_TYPE_FILE)
+                                    {
+                                        if (GetFileNameFromHandle(handle, handleEntry.OwnerPid, out string devicePath))
+                                        {
+                                            if (ConvertDevicePathToDosPath(devicePath, out string dosPath))
+                                            {
+                                                if (File.Exists(dosPath))
+                                                {
                                                     yield return dosPath;
-                                                } else if (Directory.Exists(dosPath)) {
+                                                }
+                                                else if (Directory.Exists(dosPath))
+                                                {
                                                     yield return dosPath;
                                                 }
                                             }
@@ -244,7 +276,9 @@ namespace CleanFlashCommon {
                                 offset += size;
                             }
                         }
-                    } finally {
+                    }
+                    finally
+                    {
                         // CER guarantees that the allocated memory is freed, 
                         // if an asynchronous exception occurs. 
                         Marshal.FreeHGlobal(ptr);
@@ -252,48 +286,61 @@ namespace CleanFlashCommon {
                 } while (ret == NT_STATUS.STATUS_INFO_LENGTH_MISMATCH);
             }
 
-            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
                 return GetEnumerator();
             }
         }
 
-        private class FileNameFromHandleState : IDisposable {
+        private class FileNameFromHandleState : IDisposable
+        {
             private readonly ManualResetEvent _mr;
             public IntPtr Handle { get; }
             public string FileName { get; set; }
             public bool RetValue { get; set; }
 
-            public FileNameFromHandleState(IntPtr handle) {
+            public FileNameFromHandleState(IntPtr handle)
+            {
                 _mr = new ManualResetEvent(false);
-                this.Handle = handle;
+                Handle = handle;
             }
 
-            public bool WaitOne(int wait) {
+            public bool WaitOne(int wait)
+            {
                 return _mr.WaitOne(wait, false);
             }
 
-            public void Set() {
-                try {
+            public void Set()
+            {
+                try
+                {
                     _mr.Set();
-                } catch { }
+                }
+                catch { }
             }
 
-            public void Dispose() {
-                if (_mr != null) {
+            public void Dispose()
+            {
+                if (_mr != null)
+                {
                     _mr.Close();
                 }
             }
         }
 
-        private static bool GetFileNameFromHandle(IntPtr handle, out string fileName) {
+        private static bool GetFileNameFromHandle(IntPtr handle, out string fileName)
+        {
             IntPtr ptr = IntPtr.Zero;
             RuntimeHelpers.PrepareConstrainedRegions();
 
-            try {
+            try
+            {
                 int length = 0x200;  // 512 bytes
                 RuntimeHelpers.PrepareConstrainedRegions();
 
-                try { } finally {
+                try { }
+                finally
+                {
                     // CER guarantees the assignment of the allocated 
                     // memory address to ptr, if an ansynchronous exception 
                     // occurs.
@@ -302,9 +349,12 @@ namespace CleanFlashCommon {
 
                 NT_STATUS ret = NtQueryObject(handle, OBJECT_INFORMATION_CLASS.ObjectNameInformation, ptr, length, out length);
 
-                if (ret == NT_STATUS.STATUS_BUFFER_OVERFLOW) {
+                if (ret == NT_STATUS.STATUS_BUFFER_OVERFLOW)
+                {
                     RuntimeHelpers.PrepareConstrainedRegions();
-                    try { } finally {
+                    try { }
+                    finally
+                    {
                         // CER guarantees that the previous allocation is freed,
                         // and that the newly allocated memory address is 
                         // assigned to ptr if an asynchronous exception occurs.
@@ -313,11 +363,14 @@ namespace CleanFlashCommon {
                     }
                     ret = NtQueryObject(handle, OBJECT_INFORMATION_CLASS.ObjectNameInformation, ptr, length, out length);
                 }
-                if (ret == NT_STATUS.STATUS_SUCCESS) {
+                if (ret == NT_STATUS.STATUS_SUCCESS)
+                {
                     fileName = Marshal.PtrToStringUni((IntPtr)((int)ptr + 8), (length - 9) / 2);
                     return fileName.Length != 0;
                 }
-            } finally {
+            }
+            finally
+            {
                 // CER guarantees that the allocated memory is freed, 
                 // if an asynchronous exception occurs.
                 Marshal.FreeHGlobal(ptr);
@@ -326,7 +379,8 @@ namespace CleanFlashCommon {
             fileName = string.Empty;
             return false;
         }
-        private static void GetFileNameFromHandle(object state) {
+        private static void GetFileNameFromHandle(object state)
+        {
             FileNameFromHandleState s = (FileNameFromHandleState)state;
 
             s.RetValue = GetFileNameFromHandle(s.Handle, out string fileName);
@@ -334,105 +388,139 @@ namespace CleanFlashCommon {
             s.Set();
         }
 
-        private static bool GetFileNameFromHandle(IntPtr handle, out string fileName, int wait) {
-            using (FileNameFromHandleState f = new FileNameFromHandleState(handle)) {
+        private static bool GetFileNameFromHandle(IntPtr handle, out string fileName, int wait)
+        {
+            using (FileNameFromHandleState f = new FileNameFromHandleState(handle))
+            {
                 ThreadPool.QueueUserWorkItem(new WaitCallback(GetFileNameFromHandle), f);
 
-                if (f.WaitOne(wait)) {
+                if (f.WaitOne(wait))
+                {
                     fileName = f.FileName;
                     return f.RetValue;
-                } else {
+                }
+                else
+                {
                     fileName = string.Empty;
                     return false;
                 }
             }
         }
 
-        private static bool GetFileNameFromHandle(IntPtr handle, int processId, out string fileName) {
+        private static bool GetFileNameFromHandle(IntPtr handle, int processId, out string fileName)
+        {
             IntPtr currentProcess = GetCurrentProcess();
             bool remote = processId != GetProcessId(currentProcess);
             SafeProcessHandle processHandle = null;
             SafeObjectHandle objectHandle = null;
 
-            try {
-                if (remote) {
+            try
+            {
+                if (remote)
+                {
                     processHandle = OpenProcess(ProcessAccessRights.PROCESS_DUP_HANDLE, true, processId);
-                    if (DuplicateHandle(processHandle.DangerousGetHandle(), handle, currentProcess, out objectHandle, 0, false, DuplicateHandleOptions.DUPLICATE_SAME_ACCESS)) {
+                    if (DuplicateHandle(processHandle.DangerousGetHandle(), handle, currentProcess, out objectHandle, 0, false, DuplicateHandleOptions.DUPLICATE_SAME_ACCESS))
+                    {
                         handle = objectHandle.DangerousGetHandle();
                     }
                 }
 
                 return GetFileNameFromHandle(handle, out fileName, 200);
-            } finally {
-                if (remote) {
-                    if (processHandle != null) {
+            }
+            finally
+            {
+                if (remote)
+                {
+                    if (processHandle != null)
+                    {
                         processHandle.Close();
                     }
 
-                    if (objectHandle != null) {
+                    if (objectHandle != null)
+                    {
                         objectHandle.Close();
                     }
                 }
             }
         }
 
-        private static string GetHandleTypeToken(IntPtr handle) {
+        private static string GetHandleTypeToken(IntPtr handle)
+        {
             NtQueryObject(handle, OBJECT_INFORMATION_CLASS.ObjectTypeInformation, IntPtr.Zero, 0, out int length);
             IntPtr ptr = IntPtr.Zero;
             RuntimeHelpers.PrepareConstrainedRegions();
 
-            try {
+            try
+            {
                 RuntimeHelpers.PrepareConstrainedRegions();
 
-                try { } finally {
-                    if (length >= 0) {
+                try { }
+                finally
+                {
+                    if (length >= 0)
+                    {
                         ptr = Marshal.AllocHGlobal(length);
                     }
                 }
 
-                if (NtQueryObject(handle, OBJECT_INFORMATION_CLASS.ObjectTypeInformation, ptr, length, out length) == NT_STATUS.STATUS_SUCCESS) {
+                if (NtQueryObject(handle, OBJECT_INFORMATION_CLASS.ObjectTypeInformation, ptr, length, out length) == NT_STATUS.STATUS_SUCCESS)
+                {
                     return Marshal.PtrToStringUni((IntPtr)((int)ptr + 0x60));
                 }
 
-            } finally {
+            }
+            finally
+            {
                 Marshal.FreeHGlobal(ptr);
             }
 
             return string.Empty;
         }
 
-        private static string GetHandleTypeToken(IntPtr handle, int processId) {
+        private static string GetHandleTypeToken(IntPtr handle, int processId)
+        {
             IntPtr currentProcess = GetCurrentProcess();
             bool remote = processId != GetProcessId(currentProcess);
             SafeProcessHandle processHandle = null;
             SafeObjectHandle objectHandle = null;
 
-            try {
-                if (remote) {
+            try
+            {
+                if (remote)
+                {
                     processHandle = OpenProcess(ProcessAccessRights.PROCESS_DUP_HANDLE, true, processId);
-                    if (DuplicateHandle(processHandle.DangerousGetHandle(), handle, currentProcess, out objectHandle, 0, false, DuplicateHandleOptions.DUPLICATE_SAME_ACCESS)) {
+                    if (DuplicateHandle(processHandle.DangerousGetHandle(), handle, currentProcess, out objectHandle, 0, false, DuplicateHandleOptions.DUPLICATE_SAME_ACCESS))
+                    {
                         handle = objectHandle.DangerousGetHandle();
                     }
                 }
 
                 return GetHandleTypeToken(handle);
-            } finally {
-                if (remote) {
-                    if (processHandle != null) {
+            }
+            finally
+            {
+                if (remote)
+                {
+                    if (processHandle != null)
+                    {
                         processHandle.Close();
                     }
 
-                    if (objectHandle != null) {
+                    if (objectHandle != null)
+                    {
                         objectHandle.Close();
                     }
                 }
             }
         }
 
-        private static bool GetHandleTypeFromToken(string token, out SystemHandleType handleType) {
-            for (int i = 1; i < handleTypeTokenCount; i++) {
-                if (handleTypeTokens[i] == token) {
-                    handleType = (SystemHandleType) i;
+        private static bool GetHandleTypeFromToken(string token, out SystemHandleType handleType)
+        {
+            for (int i = 1; i < handleTypeTokenCount; i++)
+            {
+                if (handleTypeTokens[i] == token)
+                {
+                    handleType = (SystemHandleType)i;
                     return true;
                 }
             }
@@ -441,17 +529,21 @@ namespace CleanFlashCommon {
             return false;
         }
 
-        private static bool GetHandleType(IntPtr handle, int processId, out SystemHandleType handleType) {
+        private static bool GetHandleType(IntPtr handle, int processId, out SystemHandleType handleType)
+        {
             string token = GetHandleTypeToken(handle, processId);
             return GetHandleTypeFromToken(token, out handleType);
         }
 
-        private static bool ConvertDevicePathToDosPath(string devicePath, out string dosPath) {
+        private static bool ConvertDevicePathToDosPath(string devicePath, out string dosPath)
+        {
             EnsureDeviceMap();
             int i = devicePath.Length;
 
-            while (i > 0 && (i = devicePath.LastIndexOf('\\', i - 1)) != -1) {
-                if (deviceMap.TryGetValue(devicePath.Substring(0, i), out string drive)) {
+            while (i > 0 && (i = devicePath.LastIndexOf('\\', i - 1)) != -1)
+            {
+                if (deviceMap.TryGetValue(devicePath.Substring(0, i), out string drive))
+                {
                     dosPath = string.Concat(drive, devicePath.Substring(i));
                     return dosPath.Length != 0;
                 }
@@ -461,19 +553,23 @@ namespace CleanFlashCommon {
             return false;
         }
 
-        private static void EnsureDeviceMap() {
-            if (deviceMap == null) {
+        private static void EnsureDeviceMap()
+        {
+            if (deviceMap == null)
+            {
                 Dictionary<string, string> localDeviceMap = BuildDeviceMap();
                 Interlocked.CompareExchange(ref deviceMap, localDeviceMap, null);
             }
         }
 
-        private static Dictionary<string, string> BuildDeviceMap() {
+        private static Dictionary<string, string> BuildDeviceMap()
+        {
             string[] logicalDrives = Environment.GetLogicalDrives();
             Dictionary<string, string> localDeviceMap = new Dictionary<string, string>(logicalDrives.Length);
             StringBuilder lpTargetPath = new StringBuilder(MAX_PATH);
 
-            foreach (string drive in logicalDrives) {
+            foreach (string drive in logicalDrives)
+            {
                 string lpDeviceName = drive.Substring(0, 2);
                 QueryDosDevice(lpDeviceName, lpTargetPath, MAX_PATH);
                 localDeviceMap.Add(NormalizeDeviceName(lpTargetPath.ToString()), lpDeviceName);
@@ -483,8 +579,10 @@ namespace CleanFlashCommon {
             return localDeviceMap;
         }
 
-        private static string NormalizeDeviceName(string deviceName) {
-            if (string.Compare(deviceName, 0, networkDevicePrefix, 0, networkDevicePrefix.Length, StringComparison.InvariantCulture) == 0) {
+        private static string NormalizeDeviceName(string deviceName)
+        {
+            if (string.Compare(deviceName, 0, networkDevicePrefix, 0, networkDevicePrefix.Length, StringComparison.InvariantCulture) == 0)
+            {
                 string shareName = deviceName.Substring(deviceName.IndexOf('\\', networkDevicePrefix.Length) + 1);
                 return string.Concat(networkDevicePrefix, shareName);
             }
@@ -497,28 +595,39 @@ namespace CleanFlashCommon {
         /// </summary>
         /// <param name="processId">The process id.</param>
         /// <returns></returns>
-        public static IEnumerable<string> GetOpenFilesEnumerator(int processId) {
+        public static IEnumerable<string> GetOpenFilesEnumerator(int processId)
+        {
             return new OpenFiles(processId);
         }
 
-        public static List<Process> GetProcessesUsingFile(string fName) {
+        public static List<Process> GetProcessesUsingFile(string fName)
+        {
             List<Process> result = new List<Process>();
-            foreach (Process p in Process.GetProcesses()) {
-                try {
-                    if (GetOpenFilesEnumerator(p.Id).Contains(fName)) {
+            foreach (Process p in Process.GetProcesses())
+            {
+                try
+                {
+                    if (GetOpenFilesEnumerator(p.Id).Contains(fName))
+                    {
                         result.Add(p);
                     }
-                } catch { } // Some processes will fail.
+                }
+                catch { } // Some processes will fail.
             }
             return result;
         }
 
-        public static void KillProcessesUsingFile(string fName) {
-            foreach (Process process in GetProcessesUsingFile(fName).OrderBy(o => o.StartTime)) {
-                try {
+        public static void KillProcessesUsingFile(string fName)
+        {
+            foreach (Process process in GetProcessesUsingFile(fName).OrderBy(o => o.StartTime))
+            {
+                try
+                {
                     process.Kill();
                     process.WaitForExit();
-                } catch {
+                }
+                catch
+                {
                     // Oh well...
                 }
             }

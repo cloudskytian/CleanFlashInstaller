@@ -5,28 +5,33 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace CleanFlashInstaller {
-    public partial class InstallForm : Form, IProgressForm {
-        private static string COMPLETE_INSTALL_TEXT = @"Clean Flash Player has been successfully installed!
+namespace CleanFlashInstaller
+{
+    public partial class InstallForm : Form, IProgressForm
+    {
+        private static readonly string COMPLETE_INSTALL_TEXT = @"Clean Flash Player has been successfully installed!
 Don't forget, Flash Player is no longer compatible with new browsers. We recommend using:
    •  Older Google Chrome ≤ 87
    •  Older Mozilla Firefox ≤ 84 or Basilisk Browser
 
 For Flash Player updates, check out Clean Flash Player's website!";
-        private static string COMPLETE_UNINSTALL_TEXT = @"
+        private static readonly string COMPLETE_UNINSTALL_TEXT = @"
 All versions of Flash Player have been successfully uninstalled.
 
 If you ever change your mind, check out Clean Flash Player's website!";
 
-        public InstallForm() {
+        public InstallForm()
+        {
             InitializeComponent();
         }
 
-        private void CheckAgreeBox() {
+        private void CheckAgreeBox()
+        {
             nextButton.Enabled = disclaimerBox.Checked;
         }
 
-        private void HideAllPanels() {
+        private void HideAllPanels()
+        {
             disclaimerPanel.Visible = false;
             choicePanel.Visible = false;
             playerChoicePanel.Visible = false;
@@ -36,68 +41,81 @@ If you ever change your mind, check out Clean Flash Player's website!";
             failurePanel.Visible = false;
         }
 
-        private void OpenDisclaimerPanel() {
+        private void OpenDisclaimerPanel()
+        {
             HideAllPanels();
             disclaimerPanel.Visible = true;
             prevButton.Text = "QUIT";
             nextButton.Text = "AGREE";
         }
 
-        private void OpenChoicePanel() {
+        private void OpenChoicePanel()
+        {
             HideAllPanels();
             choicePanel.Visible = true;
             prevButton.Text = "BACK";
             nextButton.Text = "NEXT";
         }
 
-        private void OpenPlayerChoicePanel() {
+        private void OpenPlayerChoicePanel()
+        {
             HideAllPanels();
             playerChoicePanel.Visible = true;
             prevButton.Text = "BACK";
             nextButton.Text = "NEXT";
         }
 
-        private string JoinStringsWithAnd(List<string> strings) {
+        private string JoinStringsWithAnd(List<string> strings)
+        {
             string text = string.Join(", ", strings);
             int index = text.LastIndexOf(", ");
 
-            if (index != -1) {
+            if (index != -1)
+            {
                 text = text.Substring(0, index) + " and " + text.Substring(index + 2);
             }
 
             return text;
         }
 
-        private void OpenBeforeInstall() {
+        private void OpenBeforeInstall()
+        {
             HideAllPanels();
             string text;
 
-            if (pepperBox.Checked || netscapeBox.Checked || activeXBox.Checked) {
+            if (pepperBox.Checked || netscapeBox.Checked || activeXBox.Checked)
+            {
                 List<string> browsers = new List<string>();
 
-                if (pepperBox.Checked) {
+                if (pepperBox.Checked)
+                {
                     browsers.Add("Google Chrome");
                 }
-                if (netscapeBox.Checked) {
+                if (netscapeBox.Checked)
+                {
                     browsers.Add("Mozilla Firefox");
                 }
-                if (activeXBox.Checked) {
+                if (activeXBox.Checked)
+                {
                     browsers.Add("Internet Explorer");
                 }
 
                 text = string.Format("You are about to install Clean Flash Player.\nPlease close all browsers, including Google Chrome, Mozilla Firefox and Internet Explorer.\n\nThe installer will close all browser windows, uninstall previous versions of Flash Player and\nFlash Center, and install Flash for {0}.", JoinStringsWithAnd(browsers));
                 nextButton.Text = "INSTALL";
-            } else {
+            }
+            else
+            {
                 text = "You are about to uninstall Clean Flash Player.\nPlease close all browsers, including Google Chrome, Mozilla Firefox and Internet Explorer.\n\nThe installer will completely remove all versions of Flash Player from this computer,\nincluding Clean Flash Player and older versions of Adobe Flash Player.";
                 nextButton.Text = "UNINSTALL";
             }
-            
+
             beforeInstallLabel.Text = text;
             beforeInstallPanel.Visible = true;
             prevButton.Text = "BACK";
         }
 
-        private void OpenInstall() {
+        private void OpenInstall()
+        {
             HideAllPanels();
             installPanel.Visible = true;
             prevButton.Text = "BACK";
@@ -107,7 +125,8 @@ If you ever change your mind, check out Clean Flash Player's website!";
             BeginInstall();
         }
 
-        private void OpenComplete() {
+        private void OpenComplete()
+        {
             HideAllPanels();
             completePanel.Visible = true;
             prevButton.Text = "QUIT";
@@ -115,17 +134,21 @@ If you ever change your mind, check out Clean Flash Player's website!";
 
             completeLabel.Links.Clear();
 
-            if (pepperBox.Checked || netscapeBox.Checked || activeXBox.Checked) {
+            if (pepperBox.Checked || netscapeBox.Checked || activeXBox.Checked)
+            {
                 completeLabel.Text = COMPLETE_INSTALL_TEXT;
                 completeLabel.Links.Add(new LinkLabel.Link(212, 16));
                 completeLabel.Links.Add(new LinkLabel.Link(268, 28));
-            } else {
+            }
+            else
+            {
                 completeLabel.Text = COMPLETE_UNINSTALL_TEXT;
                 completeLabel.Links.Add(new LinkLabel.Link(110, 28));
             }
         }
 
-        private void OpenFailure(Exception e) {
+        private void OpenFailure(Exception e)
+        {
             HideAllPanels();
             failurePanel.Visible = true;
             prevButton.Text = "QUIT";
@@ -135,7 +158,8 @@ If you ever change your mind, check out Clean Flash Player's website!";
             failureBox.Text = e.ToString();
         }
 
-        private void BeginInstall() {
+        private void BeginInstall()
+        {
             InstallFlags flags = new InstallFlags();
             flags.SetConditionally(pepperBox.Checked, InstallFlags.PEPPER);
             flags.SetConditionally(netscapeBox.Checked, InstallFlags.NETSCAPE);
@@ -147,135 +171,182 @@ If you ever change your mind, check out Clean Flash Player's website!";
             progressBar.Value = 0;
             progressBar.Maximum = flags.GetTicks();
 
-            new Task(new Action(() => {
+            new Task(new Action(() =>
+            {
                 IntPtr redirection = RedirectionManager.DisableRedirection();
 
-                try {
+                try
+                {
                     Uninstaller.Uninstall(this);
                     Installer.Install(this, flags);
                     Complete();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     Failure(e);
-                } finally {
+                }
+                finally
+                {
                     RedirectionManager.EnableRedirection(redirection);
                 }
             })).Start();
         }
 
-        private void disclaimerBox_CheckedChanged(object sender, EventArgs e) {
+        private void disclaimerBox_CheckedChanged(object sender, EventArgs e)
+        {
             CheckAgreeBox();
         }
 
-        private void disclaimerLabel_Click(object sender, EventArgs e) {
+        private void disclaimerLabel_Click(object sender, EventArgs e)
+        {
             disclaimerBox.Checked = !disclaimerBox.Checked;
         }
 
-        private void InstallForm_Load(object sender, EventArgs e) {
+        private void InstallForm_Load(object sender, EventArgs e)
+        {
             string version = UpdateChecker.GetFlashVersion();
 
-            subtitleLabel.Text = string.Format("built from version {0} (China)", version);
+            subtitleLabel.Text = string.Format("built from version {0}", version);
             Text = string.Format("Clean Flash Player {0} Installer", version);
 
             OpenDisclaimerPanel();
-            CheckAgreeBox();    
+            CheckAgreeBox();
         }
 
-        private void prevButton_Click(object sender, EventArgs e) {
-            if (disclaimerPanel.Visible || completePanel.Visible || failurePanel.Visible) {
+        private void prevButton_Click(object sender, EventArgs e)
+        {
+            if (disclaimerPanel.Visible || completePanel.Visible || failurePanel.Visible)
+            {
                 Application.Exit();
-            } else if (choicePanel.Visible) {
+            }
+            else if (choicePanel.Visible)
+            {
                 OpenDisclaimerPanel();
-            } else if (beforeInstallPanel.Visible) {
+            }
+            else if (beforeInstallPanel.Visible)
+            {
                 OpenPlayerChoicePanel();
-            } else if (playerChoicePanel.Visible) {
+            }
+            else if (playerChoicePanel.Visible)
+            {
                 OpenChoicePanel();
             }
         }
 
-        private void nextButton_Click(object sender, EventArgs e) {
-            if (disclaimerPanel.Visible) {
+        private void nextButton_Click(object sender, EventArgs e)
+        {
+            if (disclaimerPanel.Visible)
+            {
                 OpenChoicePanel();
-            } else if (choicePanel.Visible) {
+            }
+            else if (choicePanel.Visible)
+            {
                 OpenPlayerChoicePanel();
-            } else if (playerChoicePanel.Visible) {
+            }
+            else if (playerChoicePanel.Visible)
+            {
                 OpenBeforeInstall();
-            } else if (beforeInstallPanel.Visible || failurePanel.Visible) {
+            }
+            else if (beforeInstallPanel.Visible || failurePanel.Visible)
+            {
                 OpenInstall();
             }
         }
 
-        private void pepperLabel_Click(object sender, EventArgs e) {
+        private void pepperLabel_Click(object sender, EventArgs e)
+        {
             pepperBox.Checked = !pepperBox.Checked;
         }
 
-        private void netscapeLabel_Click(object sender, EventArgs e) {
+        private void netscapeLabel_Click(object sender, EventArgs e)
+        {
             netscapeBox.Checked = !netscapeBox.Checked;
         }
 
-        private void activeXLabel_Click(object sender, EventArgs e) {
+        private void activeXLabel_Click(object sender, EventArgs e)
+        {
             activeXBox.Checked = !activeXBox.Checked;
         }
 
-        private void playerLabel_Click(object sender, EventArgs e) {
+        private void playerLabel_Click(object sender, EventArgs e)
+        {
             playerBox.Checked = !playerBox.Checked;
         }
 
-        private void playerDesktopLabel_Click(object sender, EventArgs e) {
-            if (playerBox.Checked) {
+        private void playerDesktopLabel_Click(object sender, EventArgs e)
+        {
+            if (playerBox.Checked)
+            {
                 playerDesktopBox.Checked = !playerDesktopBox.Checked;
             }
         }
 
-        private void playerStartMenuLabel_Click(object sender, EventArgs e) {
-            if (playerBox.Checked) {
+        private void playerStartMenuLabel_Click(object sender, EventArgs e)
+        {
+            if (playerBox.Checked)
+            {
                 playerStartMenuBox.Checked = !playerStartMenuBox.Checked;
             }
         }
-        private void playerBox_CheckedChanged(object sender, EventArgs e) {
+        private void playerBox_CheckedChanged(object sender, EventArgs e)
+        {
             bool enabled = playerBox.Checked;
 
             playerDesktopBox.Enabled = enabled;
             playerStartMenuBox.Enabled = enabled;
 
-            if (!enabled) {
+            if (!enabled)
+            {
                 playerDesktopBox.Checked = false;
                 playerStartMenuBox.Checked = false;
             }
         }
 
-        public void UpdateProgressLabel(string text, bool tick) {
-            Invoke(new Action(() => {
+        public void UpdateProgressLabel(string text, bool tick)
+        {
+            Invoke(new Action(() =>
+            {
                 progressLabel.Text = text;
 
-                if (tick) {
+                if (tick)
+                {
                     progressBar.Value++;
                 }
             }));
         }
 
-        public void TickProgress() {
-            Invoke(new Action(() => {
+        public void TickProgress()
+        {
+            Invoke(new Action(() =>
+            {
                 progressBar.Value++;
             }));
         }
 
-        public void Complete() {
+        public void Complete()
+        {
             Invoke(new Action(OpenComplete));
         }
 
-        public void Failure(Exception e) {
+        public void Failure(Exception e)
+        {
             Invoke(new Action(() => OpenFailure(e)));
         }
 
-        private void completeLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            if (e.Link.Start == 212) {
+        private void completeLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (e.Link.Start == 212)
+            {
                 Process.Start("https://www.basilisk-browser.org");
-            } else {
+            }
+            else
+            {
                 Process.Start("https://cleanflash.github.io");
             }
         }
 
-        private void copyErrorButton_Click(object sender, EventArgs e) {
+        private void copyErrorButton_Click(object sender, EventArgs e)
+        {
             Clipboard.SetText(failureBox.Text);
             MessageBox.Show("Copied error message to clipboard!", "Clean Flash Installer", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

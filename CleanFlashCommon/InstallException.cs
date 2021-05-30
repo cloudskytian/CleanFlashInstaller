@@ -1,9 +1,12 @@
 ﻿using System;
 
-namespace CleanFlashCommon {
-    public class InstallException : Exception {
+namespace CleanFlashCommon
+{
+    public class InstallException : Exception
+    {
 
-        public InstallException(string message) : base(message) {
+        public InstallException(string message) : base(message)
+        {
 
         }
     }

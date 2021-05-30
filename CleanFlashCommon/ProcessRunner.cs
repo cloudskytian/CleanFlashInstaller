@@ -1,19 +1,24 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace CleanFlashCommon {
-    public class ProcessRunner {
+namespace CleanFlashCommon
+{
+    public class ProcessRunner
+    {
 
-        public static ExitedProcess RunProcess(ProcessStartInfo startInfo) {
+        public static ExitedProcess RunProcess(ProcessStartInfo startInfo)
+        {
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
             StringBuilder outputBuilder = new StringBuilder();
-            Process process = new Process {
+            Process process = new Process
+            {
                 StartInfo = startInfo
             };
             DataReceivedEventHandler outputHandler = new DataReceivedEventHandler(
-                delegate (object sender, DataReceivedEventArgs e) {
+                delegate (object sender, DataReceivedEventArgs e)
+                {
                     outputBuilder.AppendLine(e.Data);
                 }
             );
@@ -28,14 +33,17 @@ namespace CleanFlashCommon {
             process.CancelOutputRead();
             process.CancelErrorRead();
 
-            return new ExitedProcess {
+            return new ExitedProcess
+            {
                 ExitCode = process.ExitCode,
                 Output = outputBuilder.ToString().Trim()
             };
         }
 
-        public static Process RunUnmanagedProcess(ProcessStartInfo startInfo) {
-            Process process = new Process {
+        public static Process RunUnmanagedProcess(ProcessStartInfo startInfo)
+        {
+            Process process = new Process
+            {
                 StartInfo = startInfo
             };
             process.Start();
